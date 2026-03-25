@@ -1,0 +1,49 @@
+# PROGRAMA 2 - Monte um Brute force de 4 chars alfanuméricos 0-1 a-z A-Z
+from Crypto.Cipher import AES
+from base64 import b64decode
+import hashlib
+import json
+
+def testar_chave(pack_json, senha):
+    pack = json.loads(pack_json)
+
+    nonce = b64decode(pack["nonce"])
+    tag   = b64decode(pack["tag"])
+    ct    = b64decode(pack["ct"])
+
+    key = hashlib.sha256(senha.encode()).digest()
+    aes = AES.new(key, AES.MODE_GCM, nonce=nonce)
+
+    try:
+        pt = aes.decrypt_and_verify(ct, tag)
+
+        # Se chegou aqui, a senha está correta.
+        # O GCM só retorna o texto se:
+        # 1. a chave estiver certa
+        # 2. o nonce/tag/ciphertext baterem
+        return pt.decode()
+
+    except Exception:
+        # Se caiu aqui, a tentativa falhou.
+        return None
+        
+def main():
+  pack_json = '{"nonce": "dBjCtTh2wZ36Co5E1VHsBw==", "tag": "TPMTdmofrpUqjS8X/ykmXg==", "ct": "scsi9e10fcs="}'
+
+  contador = 0
+  todos_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+  for i in range(62):
+    for j in range(62):
+      for k in range(62):
+        for l in range(62):
+          contador += 1
+          chave_teste = f"{todos_chars[i]}{todos_chars[j]}{todos_chars[k]}{todos_chars[l]}"
+          print(chave_teste)
+          texto = testar_chave(pack_json, chave_teste)
+          if (texto is not None and texto != ""):
+            print(f"Parabens dog, a chave e {chave_teste} e o segredo eh {texto}")
+            return
+
+main()
+
+
